@@ -2,13 +2,21 @@ import { Connection } from '@salesforce/core';
 import { BulkyardDatabase } from './database.js';
 import { BulkyardObjectConfig } from './config.js';
 
+/** Result of loading records from SQLite into a Salesforce object via Bulk API 2.0. */
 export type LoadResult = {
+  /** The Salesforce object API name that was loaded. */
   object: string;
+  /** The SQLite table the records were read from. */
   table: string;
+  /** Total number of records submitted. */
   totalRecords: number;
+  /** Number of records that were successfully loaded. */
   successCount: number;
+  /** Number of records that failed to load. */
   failureCount: number;
+  /** Whether all records were loaded without failures. */
   success: boolean;
+  /** List of error messages from failed records. */
   errors: string[];
 };
 

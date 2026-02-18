@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.0](https://github.com/jessewheeler/bulkyard/compare/v1.0.0...v1.1.0) (2026-02-18)
+
+
+### Features
+
+* Add CI badges to README ([#10](https://github.com/jessewheeler/bulkyard/issues/10)) ([d255eea](https://github.com/jessewheeler/bulkyard/commit/d255eeab999a9a71cf5a6f297e1dab0508708dae))
+
 ## 1.0.0 (2026-02-18)
 
 

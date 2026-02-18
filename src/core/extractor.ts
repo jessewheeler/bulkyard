@@ -2,11 +2,17 @@ import { Connection } from '@salesforce/core';
 import { BulkyardDatabase, ColumnDef } from './database.js';
 import { BulkyardObjectConfig } from './config.js';
 
+/** Result of extracting a single Salesforce object into SQLite. */
 export type ExtractResult = {
+  /** The Salesforce object API name that was extracted. */
   object: string;
+  /** The SQLite table the records were written to. */
   table: string;
+  /** Number of records extracted. */
   recordCount: number;
+  /** Whether the extraction completed without errors. */
   success: boolean;
+  /** Error message if the extraction failed. */
   error?: string;
 };
 

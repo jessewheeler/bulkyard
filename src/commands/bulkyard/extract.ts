@@ -7,6 +7,7 @@ import { extractObject, ExtractResult } from '../../core/extractor.js';
 Messages.importMessagesDirectoryFromMetaUrl(import.meta.url);
 const messages = Messages.loadMessages('bulkyard', 'bulkyard.extract');
 
+/** Return type for the `bulkyard extract` command — an array of per-object extraction results. */
 export type ExtractCommandResult = ExtractResult[];
 
 export default class Extract extends SfCommand<ExtractCommandResult> {

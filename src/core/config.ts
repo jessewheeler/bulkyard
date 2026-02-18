@@ -2,16 +2,25 @@ import { readFileSync } from 'node:fs';
 import { SfError } from '@salesforce/core';
 import yaml from 'js-yaml';
 
+/** Configuration for a single Salesforce object to extract or load. */
 export type BulkyardObjectConfig = {
+  /** The Salesforce object API name (e.g. "Account", "Contact"). */
   object: string;
+  /** SOQL query used to extract records. Required for extract operations. */
   query?: string;
+  /** Bulk API operation type for load (e.g. "insert", "update", "upsert", "delete"). */
   operation?: string;
+  /** External ID field name, required when {@link operation} is "upsert". */
   externalIdField?: string;
+  /** SQLite table name override. Defaults to the object API name. */
   table?: string;
 };
 
+/** Top-level bulkyard configuration, typically loaded from a YAML config file. */
 export type BulkyardConfig = {
+  /** File path to the SQLite database. */
   database: string;
+  /** One or more Salesforce object configurations to process. */
   objects: BulkyardObjectConfig[];
 };
 
@@ -40,12 +49,19 @@ export function loadConfig(filePath: string): BulkyardConfig {
   return parsed as unknown as BulkyardConfig;
 }
 
+/** Inline flag values passed directly on the CLI instead of via a config file. */
 export type InlineFlagConfig = {
+  /** The Salesforce object API name. */
   sobject: string;
+  /** File path to the SQLite database. */
   database: string;
+  /** SOQL query for extract operations. */
   query?: string;
+  /** Bulk API operation type for load operations. */
   operation?: string;
+  /** External ID field name for upsert operations. */
   externalIdField?: string;
+  /** SQLite table name override. */
   table?: string;
 };
 

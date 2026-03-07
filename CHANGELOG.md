@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.1](https://github.com/jessewheeler/bulkyard/compare/v1.2.0...v1.2.1) (2026-03-07)
+
+
+### Bug Fixes
+
+* add `csv-parse` package and implement bulk query job handling in extractor ([#15](https://github.com/jessewheeler/bulkyard/issues/15)) ([81bbdcf](https://github.com/jessewheeler/bulkyard/commit/81bbdcf2707f85f4ff94af78f40cd129ddb3eb12))
+
 ## [1.2.0](https://github.com/jessewheeler/bulkyard/compare/v1.1.0...v1.2.0) (2026-02-18)
 
 

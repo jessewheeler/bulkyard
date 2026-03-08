@@ -1,8 +1,11 @@
 import Database from 'better-sqlite3';
 import { sfTypeToSqlite } from './type-map.js';
 
+/** Definition of a SQLite table column derived from a Salesforce field. */
 export type ColumnDef = {
+  /** The column/field name. */
   name: string;
+  /** The Salesforce field type (e.g. "string", "double", "boolean"), used to determine the SQLite column type. */
   sfType: string;
 };
 

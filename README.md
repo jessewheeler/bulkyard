@@ -1,5 +1,7 @@
 # bulkyard
 
+[![release](https://github.com/jessewheeler/bulkyard/actions/workflows/release.yml/badge.svg)](https://github.com/jessewheeler/bulkyard/actions/workflows/release.yml)[![tests](https://github.com/jessewheeler/bulkyard/actions/workflows/test.yml/badge.svg)](https://github.com/jessewheeler/bulkyard/actions/workflows/test.yml)
+
 A Salesforce CLI plugin for bulk data extraction and loading via local SQLite3 databases.
 
 Uses the Bulk API 2.0 to move data between a Salesforce org and a local SQLite database. A YAML config file drives which objects to process, enabling repeatable multi-object operations.

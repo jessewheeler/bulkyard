@@ -7,6 +7,7 @@ import { loadObject, LoadResult } from '../../core/loader.js';
 Messages.importMessagesDirectoryFromMetaUrl(import.meta.url);
 const messages = Messages.loadMessages('bulkyard', 'bulkyard.load');
 
+/** Return type for the `bulkyard load` command — an array of per-object load results. */
 export type LoadCommandResult = LoadResult[];
 
 export default class Load extends SfCommand<LoadCommandResult> {

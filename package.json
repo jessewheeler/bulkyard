@@ -1,12 +1,13 @@
 {
   "name": "bulkyard",
   "description": "A Salesforce CLI plugin for bulk data extraction and loading via local SQLite3 databases.",
-  "version": "1.0.0",
+  "version": "1.2.1",
   "dependencies": {
     "@oclif/core": "^4",
     "@salesforce/core": "^8",
     "@salesforce/sf-plugins-core": "^12",
     "better-sqlite3": "^9",
+    "csv-parse": "^5",
     "js-yaml": "^4.1.1"
   },
   "devDependencies": {
@@ -62,7 +63,7 @@
     "format": "wireit",
     "link-check": "wireit",
     "lint": "wireit",
-    "postinstall": "yarn husky install",
+    "prepare": "husky install",
     "postpack": "sf-clean --ignore-signing-artifacts",
     "prepack": "sf-prepack",
     "test": "wireit",

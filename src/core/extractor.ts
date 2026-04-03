@@ -2,6 +2,13 @@ import { Connection } from '@salesforce/core';
 import { parse } from 'csv-parse/sync';
 import { BulkyardDatabase, ColumnDef } from './database.js';
 import { BulkyardObjectConfig } from './config.js';
+import {
+  containsSelectStar,
+  expandSelectStar,
+  getQueryableFields,
+  describeToFieldInfos,
+  CachedFieldInfo,
+} from './schema.js';
 
 /** Result of extracting a single Salesforce object into SQLite. */
 export type ExtractResult = {
@@ -15,6 +22,10 @@ export type ExtractResult = {
   success: boolean;
   /** Error message if the extraction failed. */
   error?: string;
+  /** Whether a live describe call was made (cache miss) for SELECT * expansion. */
+  liveDescribe?: boolean;
+  /** Field infos fetched via live describe, available for caching. */
+  liveDescribeFields?: CachedFieldInfo[];
 };
 
 const BATCH_SIZE = 1000;
@@ -58,13 +69,39 @@ export async function extractObject(
     const apiVersion = conn.getApiVersion();
     const jobsUrl = `${conn.instanceUrl}/services/data/v${apiVersion}/jobs/query`;
 
-    const describeResult = await conn.describe(objConfig.object);
-    const fieldMap = new Map(describeResult.fields.map((f) => [f.name, f.type]));
+    let resolvedQuery = objConfig.query!;
+    let fieldMap: Map<string, string>;
+    let liveDescribe = false;
+    let liveDescribeFields: CachedFieldInfo[] | undefined;
+
+    if (containsSelectStar(resolvedQuery)) {
+      // Try schema cache first
+      db.createSchemaTable();
+      const cached = db.readSchema(objConfig.object);
+      let allFields: CachedFieldInfo[];
+
+      if (cached) {
+        allFields = cached.map((r) => ({ name: r.fieldName, type: r.fieldType }));
+      } else {
+        // Cache miss — fall back to live describe
+        const describeResult = await conn.describe(objConfig.object);
+        allFields = describeToFieldInfos(describeResult);
+        liveDescribe = true;
+        liveDescribeFields = allFields;
+      }
+
+      const queryableFields = getQueryableFields(allFields);
+      resolvedQuery = expandSelectStar(resolvedQuery, queryableFields);
+      fieldMap = new Map(allFields.map((f) => [f.name, f.type]));
+    } else {
+      const describeResult = await conn.describe(objConfig.object);
+      fieldMap = new Map(describeResult.fields.map((f) => [f.name, f.type]));
+    }
 
     // Create the bulk query job
     const jobInfo = await conn.requestPost<QueryJobInfo>(jobsUrl, {
       operation: 'query',
-      query: objConfig.query,
+      query: resolvedQuery,
     });
 
     // Poll until the job is complete
@@ -128,7 +165,14 @@ export async function extractObject(
       db.insertRecords(tableName, recordKeys, buffer);
     }
 
-    return { object: objConfig.object, table: tableName, recordCount: totalCount, success: true };
+    return {
+      object: objConfig.object,
+      table: tableName,
+      recordCount: totalCount,
+      success: true,
+      liveDescribe,
+      liveDescribeFields,
+    };
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
     return { object: objConfig.object, table: tableName, recordCount: 0, success: false, error: message };

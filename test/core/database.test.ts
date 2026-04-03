@@ -103,4 +103,46 @@ describe('BulkyardDatabase', () => {
       expect(db.getRowCount('Empty')).to.equal(0);
     });
   });
+
+  describe('createSchemaTable', () => {
+    it('creates the _bulkyard_schema table', () => {
+      db.createSchemaTable();
+      expect(db.tableExists('_bulkyard_schema')).to.be.true;
+    });
+
+    it('is idempotent', () => {
+      db.createSchemaTable();
+      db.createSchemaTable();
+      expect(db.tableExists('_bulkyard_schema')).to.be.true;
+    });
+  });
+
+  describe('writeSchema + readSchema', () => {
+    it('round-trips field data', () => {
+      db.createSchemaTable();
+      const fields = [
+        { fieldName: 'Id', fieldType: 'id' },
+        { fieldName: 'Name', fieldType: 'string' },
+      ];
+      db.writeSchema('Account', fields);
+      const result = db.readSchema('Account');
+      expect(result).to.deep.equal(fields);
+    });
+
+    it('returns null for uncached objects', () => {
+      db.createSchemaTable();
+      expect(db.readSchema('NotCached')).to.be.null;
+    });
+
+    it('replaces existing rows on re-write', () => {
+      db.createSchemaTable();
+      db.writeSchema('Account', [{ fieldName: 'Id', fieldType: 'id' }]);
+      db.writeSchema('Account', [
+        { fieldName: 'Id', fieldType: 'id' },
+        { fieldName: 'Name', fieldType: 'string' },
+      ]);
+      const result = db.readSchema('Account');
+      expect(result).to.have.lengthOf(2);
+    });
+  });
 });

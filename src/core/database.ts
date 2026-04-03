@@ -78,6 +78,37 @@ export class BulkyardDatabase {
     return row.cnt;
   }
 
+  public createSchemaTable(): void {
+    this.db.exec(`CREATE TABLE IF NOT EXISTS "_bulkyard_schema" (
+      object_name TEXT NOT NULL,
+      field_name TEXT NOT NULL,
+      field_type TEXT NOT NULL
+    )`);
+  }
+
+  public readSchema(objectName: string): Array<{ fieldName: string; fieldType: string }> | null {
+    const rows = this.db
+      .prepare('SELECT field_name, field_type FROM "_bulkyard_schema" WHERE object_name = ?')
+      .all(objectName) as Array<{ field_name: string; field_type: string }>;
+    if (rows.length === 0) return null;
+    return rows.map((r) => ({ fieldName: r.field_name, fieldType: r.field_type }));
+  }
+
+  public writeSchema(objectName: string, fields: Array<{ fieldName: string; fieldType: string }>): void {
+    this.createSchemaTable();
+    const deleteStmt = this.db.prepare('DELETE FROM "_bulkyard_schema" WHERE object_name = ?');
+    const insertStmt = this.db.prepare(
+      'INSERT INTO "_bulkyard_schema" (object_name, field_name, field_type) VALUES (?, ?, ?)'
+    );
+
+    this.db.transaction(() => {
+      deleteStmt.run(objectName);
+      for (const f of fields) {
+        insertStmt.run(objectName, f.fieldName, f.fieldType);
+      }
+    })();
+  }
+
   public close(): void {
     this.db.close();
   }

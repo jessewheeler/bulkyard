@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.3.0](https://github.com/jessewheeler/bulkyard/compare/v1.2.1...v1.3.0) (2026-04-03)
+
+
+### Features
+
+* add `bulkyard schema` command and core schema utilities ([#20](https://github.com/jessewheeler/bulkyard/issues/20)) ([d863c44](https://github.com/jessewheeler/bulkyard/commit/d863c444306fb2b308459ef66c399862a73cef2b))
+
 ## [1.2.1](https://github.com/jessewheeler/bulkyard/compare/v1.2.0...v1.2.1) (2026-03-07)
 
 

@@ -180,6 +180,103 @@ describe('extractObject', () => {
     expect(result.error).to.include('500');
   });
 
+  describe('SELECT * expansion', () => {
+    it('expands SELECT * to explicit fields using live describe on cache miss', async () => {
+      const describeStub = sinon.stub().resolves({
+        fields: [
+          { name: 'Id', type: 'id' },
+          { name: 'Name', type: 'string' },
+          { name: 'BillingAddress', type: 'address' },
+        ],
+      });
+      const requestPostStub = sinon.stub().resolves({ id: 'job-123', state: 'UploadComplete' });
+      const conn = makeConn({ describe: describeStub, requestPost: requestPostStub });
+      fetchStub.resolves({
+        ok: true,
+        headers: new Headers({ 'sforce-locator': 'null' }),
+        text: async () => 'Id,Name\n001,Acme\n',
+      });
+
+      const result = await extractObject(conn as never, db, {
+        object: 'Account',
+        query: 'SELECT * FROM Account',
+      });
+
+      expect(result.success).to.be.true;
+      expect(result.liveDescribe).to.be.true;
+      expect(result.liveDescribeFields).to.deep.equal([
+        { name: 'Id', type: 'id' },
+        { name: 'Name', type: 'string' },
+        { name: 'BillingAddress', type: 'address' },
+      ]);
+
+      // Verify the expanded query was sent (no address field, no *)
+      const postedQuery = (requestPostStub.firstCall.args[1] as Record<string, unknown>).query as string;
+      expect(postedQuery).to.include('Id');
+      expect(postedQuery).to.include('Name');
+      expect(postedQuery).to.not.include('*');
+      expect(postedQuery).to.not.include('BillingAddress');
+    });
+
+    it('uses cached schema when available (no live describe)', async () => {
+      // Pre-populate schema cache
+      db.createSchemaTable();
+      db.writeSchema('Account', [
+        { fieldName: 'Id', fieldType: 'id' },
+        { fieldName: 'Name', fieldType: 'string' },
+      ]);
+
+      const describeStub = sinon.stub().resolves({ fields: [] });
+      const requestPostStub = sinon.stub().resolves({ id: 'job-123', state: 'UploadComplete' });
+      const conn = makeConn({ describe: describeStub, requestPost: requestPostStub });
+      fetchStub.resolves({
+        ok: true,
+        headers: new Headers({ 'sforce-locator': 'null' }),
+        text: async () => 'Id,Name\n001,Acme\n',
+      });
+
+      const result = await extractObject(conn as never, db, {
+        object: 'Account',
+        query: 'SELECT * FROM Account',
+      });
+
+      expect(result.success).to.be.true;
+      expect(result.liveDescribe).to.be.false;
+      expect(describeStub.called).to.be.false;
+
+      const postedQuery = (requestPostStub.firstCall.args[1] as Record<string, unknown>).query as string;
+      expect(postedQuery).to.equal('SELECT Id, Name FROM Account');
+    });
+
+    it('excludes compound fields from expansion', async () => {
+      const requestPostStub = sinon.stub().resolves({ id: 'job-123', state: 'UploadComplete' });
+      const conn = makeConn({
+        describe: sinon.stub().resolves({
+          fields: [
+            { name: 'Id', type: 'id' },
+            { name: 'Geo__c', type: 'location' },
+            { name: 'Address', type: 'address' },
+          ],
+        }),
+        requestPost: requestPostStub,
+      });
+      fetchStub.resolves({
+        ok: true,
+        headers: new Headers({ 'sforce-locator': 'null' }),
+        text: async () => 'Id\n001\n',
+      });
+
+      const result = await extractObject(conn as never, db, {
+        object: 'Account',
+        query: 'SELECT * FROM Account',
+      });
+
+      expect(result.success).to.be.true;
+      const postedQuery = (requestPostStub.firstCall.args[1] as Record<string, unknown>).query as string;
+      expect(postedQuery).to.equal('SELECT Id FROM Account');
+    });
+  });
+
   it('converts empty CSV values to null', async () => {
     const conn = makeConn({
       describe: sinon.stub().resolves({

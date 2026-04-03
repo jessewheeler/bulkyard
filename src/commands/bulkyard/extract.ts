@@ -72,6 +72,22 @@ export default class Extract extends SfCommand<ExtractCommandResult> {
 
         if (result.success) {
           this.log(`  ${result.object} -> ${result.table}: ${result.recordCount} records`);
+
+          // Prompt to cache schema when a live describe was used (SELECT * cache miss)
+          if (result.liveDescribe && result.liveDescribeFields) {
+            // eslint-disable-next-line no-await-in-loop
+            const shouldCache = await this.confirm({
+              message: messages.getMessage('prompt.cacheSchema', [result.object]),
+              defaultAnswer: false,
+            });
+            if (shouldCache) {
+              db.createSchemaTable();
+              db.writeSchema(
+                result.object,
+                result.liveDescribeFields.map((f) => ({ fieldName: f.name, fieldType: f.type }))
+              );
+            }
+          }
         } else {
           this.warn(messages.getMessage('error.objectFailed', [result.object, result.error ?? 'unknown']));
         }

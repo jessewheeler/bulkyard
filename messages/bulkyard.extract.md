@@ -18,6 +18,10 @@ Alternatively, use --sobject and --query to extract a single object without a co
 
   <%= config.bin %> <%= command.id %> --target-org myOrg --sobject Account --query "SELECT Id, Name FROM Account"
 
+- Extract all fields from an object using SELECT \*:
+
+  <%= config.bin %> <%= command.id %> --target-org myOrg -s Account -q "SELECT \* FROM Account"
+
 - Extract inline with a custom database and table name:
 
   <%= config.bin %> <%= command.id %> --target-org myOrg -s Account -q "SELECT Id, Name FROM Account" -d my.db -t Account_Backup
@@ -49,6 +53,10 @@ Extracting %s...
 # info.complete
 
 Extraction complete.
+
+# prompt.cacheSchema
+
+Schema for "%s" was fetched from the org. Save it locally for future extractions? (y/N)
 
 # error.objectFailed
 
